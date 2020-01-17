@@ -4,6 +4,16 @@ Python dict based database with persistence and search capabilities
 
 For those times when you need something simple and sql is overkill
 
+
+## Features
+
+- pure python
+- save and load from file
+- search recursively by key and key/value pairs
+- fuzzy search
+- supports arbitrary objects
+- supports comments in saved files
+
 ## Install
 
 ```bash
