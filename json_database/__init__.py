@@ -87,13 +87,16 @@ class JsonDatabase(dict):
         return str(jsonify_recursively(self))
 
     def __getitem__(self, item):
-        return self.get_key(item)
+        if not isinstance(item, int):
+            item_id = self.get_item_id(item)
+        else:
+            item_id = item
+        if item_id < 0 or item_id >= len(self.db[self.name]):
+            return None
+        return self.db[self.name][item_id]
 
     def __setitem__(self, key, value):
         self.add_item({key: value})
-
-    def get_key(self, key):
-        return self.db.get(key)
 
     def add_item(self, value):
         value = jsonify_recursively(value)
@@ -112,8 +115,8 @@ class JsonDatabase(dict):
 
     def commit(self):
         """
-                    store the json db locally.
-                """
+            store the json db locally.
+        """
         self.db.store(self.path)
 
     def reset(self):
@@ -125,11 +128,13 @@ class JsonDatabase(dict):
         pprint(jsonify_recursively(self))
 
     def get_item_id(self, item):
+        item = jsonify_recursively(item)
         if item not in self.db[self.name]:
             return -1
         return self.db[self.name].index(item)
 
     def update_item(self, item_id, new_item):
+        new_item = jsonify_recursively(new_item)
         self.db[self.name][item_id] = new_item
 
 
@@ -145,6 +150,8 @@ if __name__ == "__main__":
             {"name": "joey",  "birthday": "may 12"} ]:
         db.add_item(user)
 
+    print(db[2])
+    exit()
     print(db.search_by_key("age"))
     print(db.search_by_key("birth", fuzzy=True))
 

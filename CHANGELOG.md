@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 current dev branch
 
+### Changed
+
+- remove get_key method from JsonDatabase
+- support accessing db by item_id ( item = db[item_id] )
+
+### Fixed
+
+- support arbitrary objects in JsonDatabase
+    - get_item_id
+    - update_item
 
 ## [0.1.0]
 
