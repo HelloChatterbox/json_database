@@ -16,4 +16,4 @@ initial release
 
 
 [unreleased]: https://github.com/OpenJarbas/jarbas_utils/tree/dev
-[0.1.0]: https://github.com/OpenJarbas/json_database/tree/0.1
+[0.1.0]: https://github.com/OpenJarbas/json_database/tree/0.1.0
