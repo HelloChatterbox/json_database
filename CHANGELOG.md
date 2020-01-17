@@ -9,10 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 current dev branch
 
+### Added
+
+- length property for db ( len(db) == number of items )
+- InvalidItemID and DatabaseNotCommitted exceptions
+
 ### Changed
 
 - remove get_key method from JsonDatabase
 - support accessing db by item_id ( item = db[item_id] )
+- support assigning item by item_id ( db[item_id] = item )
 
 ### Fixed
 

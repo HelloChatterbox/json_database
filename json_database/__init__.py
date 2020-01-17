@@ -1,4 +1,5 @@
 from json_database.utils import *
+from json_database.exceptions import InvalidItemID, DatabaseNotCommitted
 from os.path import expanduser, isdir, dirname, exists, isfile, join
 from os import makedirs, remove
 import json
@@ -48,8 +49,7 @@ class JsonStorage(dict):
         if exists(self.path) and isfile(self.path):
             self.load_local(self.path)
         else:
-            LOG.error("Can not reload because file does not exist")
-            raise FileNotFoundError
+            raise DatabaseNotCommitted
 
     def store(self, path=None):
         """
@@ -86,17 +86,28 @@ class JsonDatabase(dict):
     def __repr__(self):
         return str(jsonify_recursively(self))
 
+    def __len__(self):
+        return len(self.db[self.name])
+
     def __getitem__(self, item):
         if not isinstance(item, int):
-            item_id = self.get_item_id(item)
+            try:
+                item_id = int(item)
+            except Exception as e:
+                item_id = self.get_item_id(item)
+                if item_id < 0:
+                    raise InvalidItemID
         else:
             item_id = item
-        if item_id < 0 or item_id >= len(self.db[self.name]):
-            return None
+        if item_id >= len(self.db[self.name]):
+            raise InvalidItemID
         return self.db[self.name][item_id]
 
-    def __setitem__(self, key, value):
-        self.add_item({key: value})
+    def __setitem__(self, item_id, value):
+        if not isinstance(item_id, int) or item_id >= len(self):
+            raise InvalidItemID
+        else:
+            self.update_item(item_id, value)
 
     def add_item(self, value):
         value = jsonify_recursively(value)
@@ -120,8 +131,6 @@ class JsonDatabase(dict):
         self.db.store(self.path)
 
     def reset(self):
-        if not self.path:
-            raise ValueError("database path not set")
         self.db.reload()
 
     def print(self):
@@ -136,34 +145,3 @@ class JsonDatabase(dict):
     def update_item(self, item_id, new_item):
         new_item = jsonify_recursively(new_item)
         self.db[self.name][item_id] = new_item
-
-
-if __name__ == "__main__":
-    db = JsonDatabase("users")
-    for user in [
-            {"name": "bob", "age": 12},
-            {"name": "bobby"},
-            {"name": ["joe", "jony"]},
-            {"name": "john"},
-            {"name": "jones", "age": 35},
-            {"name": "jorge"},
-            {"name": "joey",  "birthday": "may 12"} ]:
-        db.add_item(user)
-
-    print(db[2])
-    exit()
-    print(db.search_by_key("age"))
-    print(db.search_by_key("birth", fuzzy=True))
-
-    print(db.search_by_value("age", 12))
-    print(db.search_by_value("name", "jon", fuzzy=True))
-
-    item = db.search_by_value("name", "bobby")[0]
-    item_id = db.get_item_id(item)
-    db.update_item(item_id, {"name": "don't call me bobby"})
-
-    db.reset()
-
-    db.commit()
-
-    db.print()

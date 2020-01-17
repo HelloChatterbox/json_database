@@ -1,4 +1,5 @@
 from json_database import JsonStorage
+from json_database.exceptions import DatabaseNotCommitted
 from os.path import exists
 
 save_path = "my_dict.conf"
@@ -41,5 +42,5 @@ print(my_config)
 
 try:
     my_config.reload()
-except FileNotFoundError:
+except DatabaseNotCommitted:
     print("you deleted config above dumbass")

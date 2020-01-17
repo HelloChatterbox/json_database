@@ -190,5 +190,4 @@ print(db.search_by_key("birth", fuzzy=True))
 print(db.search_by_value("age", 12))
 print(db.search_by_value("name", "jon", fuzzy=True))
 
-db.commit()
 ```
