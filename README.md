@@ -106,9 +106,9 @@ search entries by key
 ```python
 from json_database import JsonDatabase
 
-optional_file_path = "users.db"
+db_path = "users.db"
 
-db = JsonDatabase("users", optional_file_path) # loaded automatically from previous step
+db = JsonDatabase("users", db_path) # load db created in previous example
 
 # search by exact key match
 users_with_defined_age = db.search_by_key("age")
@@ -148,7 +148,7 @@ item = {"name": "bobby"}
 
 item_id = db.get_item_id(item)
 
-if item_id > 0:
+if item_id >= 0:
     new_item = {"name": "don't call me bobby"}
     db.update_item(item_id, new_item)
 else:

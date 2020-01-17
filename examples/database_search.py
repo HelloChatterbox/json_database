@@ -44,7 +44,7 @@ item = {
         }
 item_id = db.get_item_id(item)
 
-if item_id > 0:
+if item_id >= 0:
     db.update_item(item_id, {"name": "don't call me bobby"})
 else:
     print("item not found in database")
