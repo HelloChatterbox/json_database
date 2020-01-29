@@ -1,5 +1,5 @@
 from json_database.utils import *
-from json_database.exceptions import InvalidItemID, DatabaseNotCommitted
+from json_database.exceptions import InvalidItemID, DatabaseNotCommitted, SessionError
 from os.path import expanduser, isdir, dirname, exists, isfile, join
 from os import makedirs, remove
 import json
@@ -73,6 +73,18 @@ class JsonStorage(dict):
         merge_dict(self, conf)
         return self
 
+    def __enter__(self):
+        """ Context handler """
+        return self
+
+    def __exit__(self, _type, value, traceback):
+        """ Commits changes and Closes the session """
+        try:
+            self.store()
+        except Exception as e:
+            LOG.error(e)
+            raise SessionError
+
 
 class JsonDatabase(dict):
     def __init__(self, name, path=None):
@@ -82,6 +94,18 @@ class JsonDatabase(dict):
         self.db = JsonStorage(self.path)
         self.db[name] = []
         self.db.load_local(self.path)
+
+    def __enter__(self):
+        """ Context handler """
+        return self
+
+    def __exit__(self, _type, value, traceback):
+        """ Commits changes and Closes the session """
+        try:
+            self.commit()
+        except Exception as e:
+            LOG.error(e)
+            raise SessionError
 
     def __repr__(self):
         return str(jsonify_recursively(self))

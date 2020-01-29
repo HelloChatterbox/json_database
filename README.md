@@ -76,29 +76,28 @@ Let's create a dummy database with users
 ```python
 from json_database import JsonDatabase
 
-optional_file_path = "users.db"
+db_path = "users.db"
 
-db = JsonDatabase("users", optional_file_path)
+with JsonDatabase("users", db_path) as db:
+    # add some users to the database
 
-# add some users to the database
+    for user in [
+        {"name": "bob", "age": 12},
+        {"name": "bobby"},
+        {"name": ["joe", "jony"]},
+        {"name": "john"},
+        {"name": "jones", "age": 35},
+        {"name": "joey", "birthday": "may 12"}]:
+        db.add_item(user)
+        
+    # pretty print database contents
+    db.print()
 
-for user in [
-    {"name": "bob", "age": 12},
-    {"name": "bobby"},
-    {"name": ["joe", "jony"]},
-    {"name": "john"},
-    {"name": "jones", "age": 35},
-    {"name": "jorge"},  # NOTE: no duplicate entries allowed
-    {"name": "jorge"},  # this one will be ignored
-    {"name": "joey", "birthday": "may 12"}]:
-    
-    db.add_item(user)
 
-# pretty print database contents
-db.print()
+# auto saved when used with context manager
+# db.commit()
 
-# save it
-db.commit()
+
 ```
          
 search entries by key

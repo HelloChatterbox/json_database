@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 current dev branch
 
+
+## [0.1.1]
+
 ### Added
 
 - length property for db ( len(db) == number of items )
 - InvalidItemID and DatabaseNotCommitted exceptions
+- context manager
 
 ### Changed
 
