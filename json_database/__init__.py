@@ -169,3 +169,6 @@ class JsonDatabase(dict):
     def update_item(self, item_id, new_item):
         new_item = jsonify_recursively(new_item)
         self.db[self.name][item_id] = new_item
+
+    def remove_item(self, item_id):
+        return self.db[self.name].pop(item_id)
