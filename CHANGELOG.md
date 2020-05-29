@@ -11,9 +11,10 @@ current dev branch
 
 ## [0.1.2]
 
+### Added
+
 - delete_item
 
-### Added
 
 ## [0.1.1]
 
@@ -41,6 +42,6 @@ initial release
 
 
 [unreleased]: https://github.com/OpenJarbas/json_database/tree/dev
-[0.1.1]: https://github.com/OpenJarbas/json_database/tree/0.1.2
+[0.1.2]: https://github.com/OpenJarbas/json_database/tree/0.1.2
 [0.1.1]: https://github.com/OpenJarbas/json_database/tree/0.1.1
 [0.1.0]: https://github.com/OpenJarbas/json_database/tree/0.1.0
