@@ -8,3 +8,7 @@ class DatabaseNotCommitted(FileNotFoundError):
 
 class SessionError(RuntimeError):
     """ Could not commit database"""
+
+
+class MatchError(ValueError):
+    """ could not match an item in db """

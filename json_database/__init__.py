@@ -1,10 +1,13 @@
 from json_database.utils import *
-from json_database.exceptions import InvalidItemID, DatabaseNotCommitted, SessionError
+from json_database.exceptions import InvalidItemID, DatabaseNotCommitted, \
+    SessionError, MatchError
 from os.path import expanduser, isdir, dirname, exists, isfile, join
 from os import makedirs, remove
 import json
 import logging
 from pprint import pprint
+import xdg
+from enum import Enum
 
 
 LOG = logging.getLogger("JsonDatabase")
@@ -12,7 +15,7 @@ LOG = logging.getLogger("JsonDatabase")
 
 class JsonStorage(dict):
     """
-        json dict from file.
+    persistent python dict
     """
     def __init__(self, path):
         super().__init__()
@@ -69,8 +72,8 @@ class JsonStorage(dict):
         if isfile(self.path):
             remove(self.path)
 
-    def merge(self, conf):
-        merge_dict(self, conf)
+    def merge(self, data):
+        merge_dict(self, data)
         return self
 
     def __enter__(self):
@@ -90,11 +93,12 @@ class JsonDatabase(dict):
     def __init__(self, name, path=None):
         super().__init__()
         self.name = name
-        self.path = path or join(dirname(__file__), self.name + ".json")
+        self.path = path or self.name + ".json"
         self.db = JsonStorage(self.path)
         self.db[name] = []
         self.db.load_local(self.path)
 
+    # operator overloads
     def __enter__(self):
         """ Context handler """
         return self
@@ -133,21 +137,15 @@ class JsonDatabase(dict):
         else:
             self.update_item(item_id, value)
 
-    def add_item(self, value):
-        value = jsonify_recursively(value)
-        if value not in self.db[self.name]:
-            self.db[self.name] += [value]
+    def __iter__(self):
+        for item in self.db[self.name]:
+            yield item
 
-    def search_by_key(self, key, fuzzy=False, thresh=0.7, include_empty=False):
-        if fuzzy:
-            return get_key_recursively_fuzzy(self.db, key, thresh, not include_empty)
-        return get_key_recursively(self.db, key, not include_empty)
+    def __contains__(self, item):
+        item = jsonify_recursively(item)
+        return item in self.db[self.name]
 
-    def search_by_value(self, key, value, fuzzy=False, thresh=0.7):
-        if fuzzy:
-            return get_value_recursively_fuzzy(self.db, key, value, thresh)
-        return get_value_recursively(self.db, key, value)
-
+    # database
     def commit(self):
         """
             store the json db locally.
@@ -160,15 +158,128 @@ class JsonDatabase(dict):
     def print(self):
         pprint(jsonify_recursively(self))
 
+    # item manipulations
+    def append(self, value):
+        value = jsonify_recursively(value)
+        self.db[self.name].append(value)
+        return len(self)
+
+    def add_item(self, value, allow_duplicates=False):
+        """ add an item to database
+         if allow_duplicates is True, item is added unconditionally,
+         else only if no exact match is present
+         """
+        if allow_duplicates or value not in self:
+            self.append(value)
+            return len(self)
+        return self.get_item_id(value)
+
+    def match_item(self, value, match_strategy=None):
+        """ match value to some item in database
+        returns a list of matched items
+        """
+        value = jsonify_recursively(value)
+        matches = []
+        for idx, item in enumerate(self):
+
+            # TODO match strategy
+            # - require exact match
+            # - require list of keys to match
+            # - require at least one of key list to match
+            # - require at exactly one of key list to match
+
+            # by default check for exact matches
+            if item == value:
+                matches.append((item, idx))
+
+        return matches
+
+    def merge_item(self, value, match_strategy=None, merge_strategy=None):
+        """ search an item according to match criteria, merge fields"""
+
+        matches = self.match_item(value, match_strategy)
+        if not matches:
+            raise MatchError
+
+        # TODO merge strategy
+        # - only merge some keys
+        # - dont merge some keys
+        # - merge all keys
+        # - dont overwrite keys
+        value = jsonify_recursively(value)
+        for match, idx in matches:
+            self[idx] = merge_dict(match, value)
+
+    def replace_item(self, value, match_strategy=None):
+        """ search an item according to match criteria, replace it"""
+        matches = self.match_item(value, match_strategy)
+        if not matches:
+            raise MatchError
+
+        value = jsonify_recursively(value)
+        for match, idx in matches:
+            self[idx] = value
+
+    # item_id
     def get_item_id(self, item):
-        item = jsonify_recursively(item)
-        if item not in self.db[self.name]:
-            return -1
-        return self.db[self.name].index(item)
+        """
+        item_id is simply the index of the item in the database
+        WARNING: this is not immutable across sessions
+        """
+        for match, idx in self.match_item(item):
+            return idx
+        return -1
 
     def update_item(self, item_id, new_item):
+        """
+        item_id is simply the index of the item in the database
+        WARNING: this is not immutable across sessions
+        """
         new_item = jsonify_recursively(new_item)
         self.db[self.name][item_id] = new_item
 
     def remove_item(self, item_id):
+        """
+        item_id is simply the index of the item in the database
+        WARNING: this is not immutable across sessions
+        """
         return self.db[self.name].pop(item_id)
+
+    # search
+    def search_by_key(self, key, fuzzy=False, thresh=0.7, include_empty=False):
+        if fuzzy:
+            return get_key_recursively_fuzzy(self.db, key, thresh, not include_empty)
+        return get_key_recursively(self.db, key, not include_empty)
+
+    def search_by_value(self, key, value, fuzzy=False, thresh=0.7):
+        if fuzzy:
+            return get_value_recursively_fuzzy(self.db, key, value, thresh)
+        return get_value_recursively(self.db, key, value)
+
+
+# XDG aware classes
+
+
+class XDGfolder(Enum):
+    CACHE = xdg.XDG_CACHE_HOME
+    DATA = xdg.XDG_DATA_HOME
+    CONFIG = xdg.XDG_CONFIG_HOME
+
+
+class JsonStorageXDG(JsonStorage):
+    """ xdg respectful persistent dicts """
+
+    def __init__(self, name, xdg_folder=XDGfolder.CACHE):
+        assert isinstance(xdg_folder, XDGfolder)
+        self.name = name
+        path = join(str(xdg_folder), "json_database", name + ".json")
+        super().__init__(path)
+
+
+class JsonDatabaseXDG(JsonDatabase):
+    """ xdg respectful json database """
+
+    def __init__(self, name, xdg_folder=XDGfolder.DATA):
+        assert isinstance(xdg_folder, XDGfolder)
+        path = join(str(xdg_folder), "json_database", name + ".jsondb")
+        super().__init__(name, path)
