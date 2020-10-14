@@ -90,6 +90,7 @@ class JsonStorage(dict):
 
 
 class JsonDatabase(dict):
+    """ searchable persistent dict """
     def __init__(self, name, path=None):
         super().__init__()
         self.name = name
