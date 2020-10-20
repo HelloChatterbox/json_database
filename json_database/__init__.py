@@ -270,17 +270,15 @@ class XDGfolder(Enum):
 class JsonStorageXDG(JsonStorage):
     """ xdg respectful persistent dicts """
 
-    def __init__(self, name, xdg_folder=XDGfolder.CACHE):
-        assert isinstance(xdg_folder, XDGfolder)
+    def __init__(self, name, xdg_folder=xdg.XDG_CACHE_HOME):
         self.name = name
-        path = join(str(xdg_folder), "json_database", name + ".json")
+        path = join(xdg_folder, "json_database", name + ".json")
         super().__init__(path)
 
 
 class JsonDatabaseXDG(JsonDatabase):
     """ xdg respectful json database """
 
-    def __init__(self, name, xdg_folder=XDGfolder.DATA):
-        assert isinstance(xdg_folder, XDGfolder)
-        path = join(str(xdg_folder), "json_database", name + ".jsondb")
+    def __init__(self, name, xdg_folder=xdg.XDG_DATA_HOME):
+        path = join(xdg_folder, "json_database", name + ".jsondb")
         super().__init__(name, path)
