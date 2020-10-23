@@ -5,8 +5,9 @@ from os.path import expanduser, isdir, dirname, exists, isfile, join
 from os import makedirs, remove
 import json
 import logging
+import threading
 from pprint import pprint
-import xdg
+from xdg import XDG_DATA_HOME, XDG_CACHE_HOME, XDG_CONFIG_HOME
 from enum import Enum
 
 
@@ -17,6 +18,8 @@ class JsonStorage(dict):
     """
     persistent python dict
     """
+    lock = threading.Lock()
+
     def __init__(self, path):
         super().__init__()
         self.path = path
@@ -30,19 +33,20 @@ class JsonStorage(dict):
             Args:
                 path (str): file to load
         """
-        path = expanduser(path)
-        if exists(path) and isfile(path):
-            self.clear()
-            try:
-                config = load_commented_json(path)
-                for key in config:
-                    self[key] = config[key]
-                LOG.debug("Json {} loaded".format(path))
-            except Exception as e:
-                LOG.error("Error loading json '{}'".format(path))
-                LOG.error(repr(e))
-        else:
-            LOG.debug("Json '{}' not defined, skipping".format(path))
+        with self.lock:
+            path = expanduser(path)
+            if exists(path) and isfile(path):
+                self.clear()
+                try:
+                    config = load_commented_json(path)
+                    for key in config:
+                        self[key] = config[key]
+                    LOG.debug("Json {} loaded".format(path))
+                except Exception as e:
+                    LOG.error("Error loading json '{}'".format(path))
+                    LOG.error(repr(e))
+            else:
+                LOG.debug("Json '{}' not defined, skipping".format(path))
 
     def clear(self):
         for k in dict(self):
@@ -58,19 +62,21 @@ class JsonStorage(dict):
         """
             store the json db locally.
         """
-        path = path or self.path
-        if not path:
-            LOG.warning("json db path not set")
-            return
-        path = expanduser(path)
-        if dirname(path) and not isdir(dirname(path)):
-            makedirs(dirname(path))
-        with open(path, 'w', encoding="utf-8") as f:
-            json.dump(self, f, indent=4, ensure_ascii=False)
+        with self.lock:
+            path = path or self.path
+            if not path:
+                LOG.warning("json db path not set")
+                return
+            path = expanduser(path)
+            if dirname(path) and not isdir(dirname(path)):
+                makedirs(dirname(path))
+            with open(path, 'w', encoding="utf-8") as f:
+                json.dump(self, f, indent=4, ensure_ascii=False)
 
     def remove(self):
-        if isfile(self.path):
-            remove(self.path)
+        with self.lock:
+            if isfile(self.path):
+                remove(self.path)
 
     def merge(self, data):
         merge_dict(self, data)
@@ -262,15 +268,15 @@ class JsonDatabase(dict):
 
 
 class XDGfolder(Enum):
-    CACHE = xdg.XDG_CACHE_HOME
-    DATA = xdg.XDG_DATA_HOME
-    CONFIG = xdg.XDG_CONFIG_HOME
+    CACHE = XDG_CACHE_HOME
+    DATA = XDG_DATA_HOME
+    CONFIG = XDG_CONFIG_HOME
 
 
 class JsonStorageXDG(JsonStorage):
     """ xdg respectful persistent dicts """
 
-    def __init__(self, name, xdg_folder=xdg.XDG_CACHE_HOME):
+    def __init__(self, name, xdg_folder=XDG_CACHE_HOME):
         self.name = name
         path = join(xdg_folder, "json_database", name + ".json")
         super().__init__(path)
@@ -279,6 +285,6 @@ class JsonStorageXDG(JsonStorage):
 class JsonDatabaseXDG(JsonDatabase):
     """ xdg respectful json database """
 
-    def __init__(self, name, xdg_folder=xdg.XDG_DATA_HOME):
+    def __init__(self, name, xdg_folder=XDG_DATA_HOME):
         path = join(xdg_folder, "json_database", name + ".jsondb")
         super().__init__(name, path)
