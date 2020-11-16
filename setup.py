@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='json_database',
-    version='0.2.7',
+    version='0.2.8',
     packages=['json_database'],
     url='https://github.com/OpenJarbas/json_database',
     license='MIT',

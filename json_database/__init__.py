@@ -35,19 +35,20 @@ class JsonStorage(dict):
             Args:
                 path (str): file to load
         """
-        path = expanduser(path)
-        if exists(path) and isfile(path):
-            self.clear()
-            try:
-                config = load_commented_json(path)
-                for key in config:
-                    self[key] = config[key]
-                LOG.debug("Json {} loaded".format(path))
-            except Exception as e:
-                LOG.error("Error loading json '{}'".format(path))
-                LOG.error(repr(e))
-        else:
-            LOG.debug("Json '{}' not defined, skipping".format(path))
+        with self.lock:
+            path = expanduser(path)
+            if exists(path) and isfile(path):
+                self.clear()
+                try:
+                    config = load_commented_json(path)
+                    for key in config:
+                        self[key] = config[key]
+                    LOG.debug("Json {} loaded".format(path))
+                except Exception as e:
+                    LOG.error("Error loading json '{}'".format(path))
+                    LOG.error(repr(e))
+            else:
+                LOG.debug("Json '{}' not defined, skipping".format(path))
 
     def clear(self):
         for k in dict(self):
