@@ -5,11 +5,12 @@ from os.path import expanduser, isdir, dirname, exists, isfile, join
 from os import makedirs, remove
 import json
 import logging
-import threading
 from pprint import pprint
 from xdg import XDG_DATA_HOME, XDG_CACHE_HOME, XDG_CONFIG_HOME
 from enum import Enum
+from json_database.combo_lock import ComboLock
 
+from tempfile import gettempdir
 
 LOG = logging.getLogger("JsonDatabase")
 
@@ -18,10 +19,11 @@ class JsonStorage(dict):
     """
     persistent python dict
     """
-    lock = threading.Lock()
 
     def __init__(self, path):
         super().__init__()
+        lock_path = join(gettempdir(), path.split("/")[-1] + ".lock")
+        self.lock = ComboLock(lock_path)
         self.path = path
         if self.path:
             self.load_local(self.path)
@@ -33,20 +35,19 @@ class JsonStorage(dict):
             Args:
                 path (str): file to load
         """
-        with self.lock:
-            path = expanduser(path)
-            if exists(path) and isfile(path):
-                self.clear()
-                try:
-                    config = load_commented_json(path)
-                    for key in config:
-                        self[key] = config[key]
-                    LOG.debug("Json {} loaded".format(path))
-                except Exception as e:
-                    LOG.error("Error loading json '{}'".format(path))
-                    LOG.error(repr(e))
-            else:
-                LOG.debug("Json '{}' not defined, skipping".format(path))
+        path = expanduser(path)
+        if exists(path) and isfile(path):
+            self.clear()
+            try:
+                config = load_commented_json(path)
+                for key in config:
+                    self[key] = config[key]
+                LOG.debug("Json {} loaded".format(path))
+            except Exception as e:
+                LOG.error("Error loading json '{}'".format(path))
+                LOG.error(repr(e))
+        else:
+            LOG.debug("Json '{}' not defined, skipping".format(path))
 
     def clear(self):
         for k in dict(self):
