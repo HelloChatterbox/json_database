@@ -8,7 +8,7 @@ import logging
 from pprint import pprint
 from xdg import XDG_DATA_HOME, XDG_CACHE_HOME, XDG_CONFIG_HOME
 from enum import Enum
-from json_database.combo_lock import ComboLock
+from json_database.utils.combo_lock import ComboLock
 
 from tempfile import gettempdir
 
