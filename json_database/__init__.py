@@ -268,13 +268,6 @@ class JsonDatabase(dict):
 
 # XDG aware classes
 
-
-class XDGfolder(Enum):
-    CACHE = XDG_CACHE_HOME
-    DATA = XDG_DATA_HOME
-    CONFIG = XDG_CONFIG_HOME
-
-
 class JsonStorageXDG(JsonStorage):
     """ xdg respectful persistent dicts """
 
