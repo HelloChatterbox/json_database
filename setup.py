@@ -8,6 +8,6 @@ setup(
     license='MIT',
     author='jarbasAI',
     author_email='jarbasai@mailfence.com',
-    install_requires=["xdg", "fasteners"],
+    install_requires=["pyxdg", "fasteners"],
     description='searchable json database with persistence'
 )

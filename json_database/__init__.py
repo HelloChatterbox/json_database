@@ -6,7 +6,7 @@ from os import makedirs, remove
 import json
 import logging
 from pprint import pprint
-from xdg import XDG_DATA_HOME, XDG_CACHE_HOME, XDG_CONFIG_HOME
+from xdg import BaseDirectory
 from enum import Enum
 from json_database.utils.combo_lock import ComboLock
 
@@ -278,7 +278,7 @@ class XDGfolder(Enum):
 class JsonStorageXDG(JsonStorage):
     """ xdg respectful persistent dicts """
 
-    def __init__(self, name, xdg_folder=XDG_CACHE_HOME):
+    def __init__(self, name, xdg_folder=BaseDirectory.xdg_cache_home):
         self.name = name
         path = join(xdg_folder, "json_database", name + ".json")
         super().__init__(path)
@@ -287,6 +287,6 @@ class JsonStorageXDG(JsonStorage):
 class JsonDatabaseXDG(JsonDatabase):
     """ xdg respectful json database """
 
-    def __init__(self, name, xdg_folder=XDG_DATA_HOME):
+    def __init__(self, name, xdg_folder=BaseDirectory.xdg_data_home):
         path = join(xdg_folder, "json_database", name + ".jsondb")
         super().__init__(name, path)
