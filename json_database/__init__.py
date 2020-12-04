@@ -7,7 +7,6 @@ import json
 import logging
 from pprint import pprint
 from xdg import BaseDirectory
-from enum import Enum
 from json_database.utils.combo_lock import ComboLock
 
 from tempfile import gettempdir
