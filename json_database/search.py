@@ -5,9 +5,9 @@ from json_database import JsonDatabase, JsonStorageXDG
 class Query:
     def __init__(self, db):
         if isinstance(db, JsonDatabase):
-            self.result = [a for _, a in db.db.items()]
+            self.result = list(db)
         else:
-            self.result = [a for _, a in db.items()]
+            self.result = [db]
 
     def contains_key(self, key, fuzzy=False, thresh=0.7):
         if fuzzy:
