@@ -40,21 +40,33 @@ def match_one(query, choices):
         return best
 
 
-def merge_dict(base, delta):
+def merge_dict(base, delta, merge_lists=True, skip_empty=True, no_dupes=True):
     """
         Recursively merging configuration dictionaries.
 
         Args:
             base:  Target for merge
             delta: Dictionary to merge into base
+            merge_lists: if a list is found merge contents instead of replacing
+            skip_empty: if an item in delta is empty, dont overwrite base
+            no_dupes: when merging lists deduplicate entries
     """
 
-    for k, dv in delta.items():
-        bv = base.get(k)
-        if isinstance(dv, dict) and isinstance(bv, dict):
-            merge_dict(bv, dv)
+    for k, d in delta.items():
+        b = base.get(k)
+        if isinstance(d, dict) and isinstance(b, dict):
+            merge_dict(b, d)
         else:
-            base[k] = dv
+            if skip_empty and not d:
+                # dont replace if new entry is empty
+                pass
+            elif all((isinstance(b, list), isinstance(d, list), merge_lists)):
+                base[k] += d
+                if no_dupes:
+                    # deduplicate
+                    base[k] = list(set(base[k]))
+            else:
+                base[k] = d
     return base
 
 

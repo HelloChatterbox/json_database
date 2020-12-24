@@ -123,7 +123,7 @@ class JsonDatabase(dict):
         return str(jsonify_recursively(self))
 
     def __len__(self):
-        return len(self.db[self.name])
+        return len(self.db.get(self.name, []))
 
     def __getitem__(self, item):
         if not isinstance(item, int):
@@ -140,7 +140,7 @@ class JsonDatabase(dict):
         return self.db[self.name][item_id]
 
     def __setitem__(self, item_id, value):
-        if not isinstance(item_id, int) or item_id >= len(self):
+        if not isinstance(item_id, int) or item_id >= len(self) or item_id < 0:
             raise InvalidItemID
         else:
             self.update_item(item_id, value)
@@ -202,31 +202,33 @@ class JsonDatabase(dict):
 
         return matches
 
-    def merge_item(self, value, match_strategy=None, merge_strategy=None):
+    def merge_item(self, value, item_id=None, match_strategy=None,
+                   merge_strategy=None):
         """ search an item according to match criteria, merge fields"""
-
-        matches = self.match_item(value, match_strategy)
-        if not matches:
-            raise MatchError
-
+        if item_id is None:
+            matches = self.match_item(value, match_strategy)
+            if not matches:
+                raise MatchError
+            match, item_id = matches[0][1]
+        else:
+            match = self[item_id]
         # TODO merge strategy
         # - only merge some keys
         # - dont merge some keys
         # - merge all keys
         # - dont overwrite keys
         value = jsonify_recursively(value)
-        for match, idx in matches:
-            self[idx] = merge_dict(match, value)
+        self[item_id] = merge_dict(match, value)
 
-    def replace_item(self, value, match_strategy=None):
+    def replace_item(self, value, item_id=None, match_strategy=None):
         """ search an item according to match criteria, replace it"""
-        matches = self.match_item(value, match_strategy)
-        if not matches:
-            raise MatchError
-
+        if item_id is None:
+            matches = self.match_item(value, match_strategy)
+            if not matches:
+                raise MatchError
+            match, item_id = matches[0][1]
         value = jsonify_recursively(value)
-        for match, idx in matches:
-            self[idx] = value
+        self[item_id] = value
 
     # item_id
     def get_item_id(self, item):
