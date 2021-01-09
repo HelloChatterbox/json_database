@@ -79,8 +79,9 @@ class JsonStorage(dict):
             if isfile(self.path):
                 remove(self.path)
 
-    def merge(self, data):
-        merge_dict(self, data)
+    def merge(self, conf, merge_lists=True, skip_empty=True, no_dupes=True,
+              new_only=False):
+        merge_dict(self, conf, merge_lists, skip_empty, no_dupes, new_only)
         return self
 
     def __enter__(self):
