@@ -61,7 +61,7 @@ def merge_dict(base, delta, merge_lists=True, skip_empty=True,
         else:
             if new_only and k in base:
                 continue
-            if skip_empty and d is not False:
+            if skip_empty and not d and d is not False:
                 # dont replace if new entry is empty
                 pass
             elif all((isinstance(b, list), isinstance(d, list), merge_lists)):
