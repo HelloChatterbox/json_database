@@ -7,7 +7,7 @@ import json
 import logging
 from pprint import pprint
 from xdg import BaseDirectory
-from json_database.utils.combo_lock import ComboLock
+from json_database.utils.combo_lock import ComboLock, DummyLock
 
 from tempfile import gettempdir
 
@@ -19,10 +19,15 @@ class JsonStorage(dict):
     persistent python dict
     """
 
-    def __init__(self, path):
+    def __init__(self, path, disable_lock=False):
         super().__init__()
         lock_path = join(gettempdir(), path.split("/")[-1] + ".lock")
-        self.lock = ComboLock(lock_path)
+        if disable_lock:
+            LOG.warning("Lock is disabled, database might get corrupted if "
+                        "different processes try to use it at same time!")
+            self.lock = DummyLock(lock_path)
+        else:
+            self.lock = ComboLock(lock_path)
         self.path = path
         if self.path:
             self.load_local(self.path)
@@ -99,11 +104,11 @@ class JsonStorage(dict):
 
 class JsonDatabase(dict):
     """ searchable persistent dict """
-    def __init__(self, name, path=None):
+    def __init__(self, name, path=None, disable_lock=False):
         super().__init__()
         self.name = name
         self.path = path or self.name + ".json"
-        self.db = JsonStorage(self.path)
+        self.db = JsonStorage(self.path, disable_lock=disable_lock)
         self.db[name] = []
         self.db.load_local(self.path)
 
@@ -273,15 +278,17 @@ class JsonDatabase(dict):
 class JsonStorageXDG(JsonStorage):
     """ xdg respectful persistent dicts """
 
-    def __init__(self, name, xdg_folder=BaseDirectory.xdg_cache_home):
+    def __init__(self, name, xdg_folder=BaseDirectory.xdg_cache_home,
+                 disable_lock=False):
         self.name = name
         path = join(xdg_folder, "json_database", name + ".json")
-        super().__init__(path)
+        super().__init__(path, disable_lock=disable_lock)
 
 
 class JsonDatabaseXDG(JsonDatabase):
     """ xdg respectful json database """
 
-    def __init__(self, name, xdg_folder=BaseDirectory.xdg_data_home):
+    def __init__(self, name, xdg_folder=BaseDirectory.xdg_data_home,
+                 disable_lock=False):
         path = join(xdg_folder, "json_database", name + ".jsondb")
-        super().__init__(name, path)
+        super().__init__(name, path, disable_lock=disable_lock)
