@@ -279,9 +279,9 @@ class JsonStorageXDG(JsonStorage):
     """ xdg respectful persistent dicts """
 
     def __init__(self, name, xdg_folder=BaseDirectory.xdg_cache_home,
-                 disable_lock=False):
+                 disable_lock=False, subfolder="json_database"):
         self.name = name
-        path = join(xdg_folder, "json_database", name + ".json")
+        path = join(xdg_folder, subfolder, name + ".json")
         super().__init__(path, disable_lock=disable_lock)
 
 
@@ -289,6 +289,6 @@ class JsonDatabaseXDG(JsonDatabase):
     """ xdg respectful json database """
 
     def __init__(self, name, xdg_folder=BaseDirectory.xdg_data_home,
-                 disable_lock=False):
-        path = join(xdg_folder, "json_database", name + ".jsondb")
+                 disable_lock=False, subfolder="json_database"):
+        path = join(xdg_folder, subfolder, name + ".jsondb")
         super().__init__(name, path, disable_lock=disable_lock)
