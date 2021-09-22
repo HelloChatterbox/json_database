@@ -104,10 +104,14 @@ class JsonStorage(dict):
 
 class JsonDatabase(dict):
     """ searchable persistent dict """
-    def __init__(self, name, path=None, disable_lock=False):
+    def __init__(self,
+            name,
+            path=None,
+            disable_lock=False,
+            extension=".json"):
         super().__init__()
         self.name = name
-        self.path = path or self.name + ".json"
+        self.path = path or self.name + extension
         self.db = JsonStorage(self.path, disable_lock=disable_lock)
         self.db[name] = []
         self.db.load_local(self.path)
@@ -278,10 +282,13 @@ class JsonDatabase(dict):
 class JsonStorageXDG(JsonStorage):
     """ xdg respectful persistent dicts """
 
-    def __init__(self, name, xdg_folder=BaseDirectory.xdg_cache_home,
-                 disable_lock=False, subfolder="json_database"):
+    def __init__(self,
+                 name,
+                 xdg_folder=BaseDirectory.xdg_cache_home,
+                 disable_lock=False, subfolder="json_database",
+                 extension=".json"):
         self.name = name
-        path = join(xdg_folder, subfolder, name + ".json")
+        path = join(xdg_folder, subfolder, name + extension)
         super().__init__(path, disable_lock=disable_lock)
 
 
@@ -289,13 +296,15 @@ class JsonDatabaseXDG(JsonDatabase):
     """ xdg respectful json database """
 
     def __init__(self, name, xdg_folder=BaseDirectory.xdg_data_home,
-                 disable_lock=False, subfolder="json_database"):
-        path = join(xdg_folder, subfolder, name + ".jsondb")
+                 disable_lock=False, subfolder="json_database",
+                 extension=".jsondb"):
+        path = join(xdg_folder, subfolder, name + extension)
         super().__init__(name, path, disable_lock=disable_lock)
 
 class JsonConfigXDG(JsonStorageXDG):
     """ xdg respectful config files, using json_storage.JsonStorageXDG """
 
     def __init__(self, name, xdg_folder=BaseDirectory.xdg_config_home,
-                 disable_lock=False, subfolder="json_database"):
-        super().__init__(name, xdg_folder, disable_lock, subfolder)
+                 disable_lock=False, subfolder="json_database",
+                 extension=".conf"):
+        super().__init__(name, xdg_folder, disable_lock, subfolder, extension)
