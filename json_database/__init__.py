@@ -306,5 +306,5 @@ class JsonConfigXDG(JsonStorageXDG):
 
     def __init__(self, name, xdg_folder=BaseDirectory.xdg_config_home,
                  disable_lock=False, subfolder="json_database",
-                 extension=".conf"):
+                 extension=".json"):
         super().__init__(name, xdg_folder, disable_lock, subfolder, extension)
