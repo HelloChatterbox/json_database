@@ -91,7 +91,7 @@ def load_commented_json(filename):
     Returns:
         obj: decoded Python object
     """
-    with open(filename) as f:
+    with open(filename, encoding='utf-8') as f:
         contents = f.read()
 
     return json.loads(uncomment_json(contents))
