@@ -108,10 +108,10 @@ class JsonDatabase(dict):
             name,
             path=None,
             disable_lock=False,
-            extension=".json"):
+            extension="json"):
         super().__init__()
         self.name = name
-        self.path = path or self.name + extension
+        self.path = path or f"{name}.{extension}"
         self.db = JsonStorage(self.path, disable_lock=disable_lock)
         self.db[name] = []
         self.db.load_local(self.path)
@@ -286,9 +286,9 @@ class JsonStorageXDG(JsonStorage):
                  name,
                  xdg_folder=BaseDirectory.xdg_cache_home,
                  disable_lock=False, subfolder="json_database",
-                 extension=".json"):
+                 extension="json"):
         self.name = name
-        path = join(xdg_folder, subfolder, name + extension)
+        path = join(xdg_folder, subfolder, f"{name}.{extension}")
         super().__init__(path, disable_lock=disable_lock)
 
 
@@ -297,14 +297,14 @@ class JsonDatabaseXDG(JsonDatabase):
 
     def __init__(self, name, xdg_folder=BaseDirectory.xdg_data_home,
                  disable_lock=False, subfolder="json_database",
-                 extension=".jsondb"):
-        path = join(xdg_folder, subfolder, name + extension)
-        super().__init__(name, path, disable_lock=disable_lock)
+                 extension="jsondb"):
+        path = join(xdg_folder, subfolder, f"{name}.{extension}")
+        super().__init__(name, path, disable_lock=disable_lock, extension=extension)
 
 class JsonConfigXDG(JsonStorageXDG):
     """ xdg respectful config files, using json_storage.JsonStorageXDG """
 
     def __init__(self, name, xdg_folder=BaseDirectory.xdg_config_home,
                  disable_lock=False, subfolder="json_database",
-                 extension=".json"):
+                 extension="json"):
         super().__init__(name, xdg_folder, disable_lock, subfolder, extension)
